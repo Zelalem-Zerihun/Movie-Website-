@@ -26,7 +26,12 @@ const MovieDetails = ({ movie, onClose }) => {
             className="w-48 h-64 object-cover"
           />
           <div>
-            
+            <p>
+              <strong>Plot:</strong> {movie.Plot}
+            </p>
+            <p>
+              <strong>Cast:</strong> {movie.Actors}
+            </p>
             <p>
               <strong>Ratings:</strong>{" "}
               {Array.isArray(movie.Ratings) &&

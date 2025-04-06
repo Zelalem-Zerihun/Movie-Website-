@@ -15,6 +15,7 @@ const App = () => {
   useEffect(() => {
     const fetchInitialMovies = async () => {
       setIsLoading(true);
+      
       try {
         const response = await axios.get(
           `http://www.omdbapi.com/?apikey=${API_KEY}&s=movie`

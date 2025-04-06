@@ -1,65 +1,118 @@
-import React, { useState } from "react";
-/* import SearchBar from "./components/SearchBar"; */
-import MovieList from "./components/MovieList";
-/* import MovieDetails from "./components/MovieDetails"; */
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import SearchBar from "./components/SearchBar";
+import MovieCard from "./components/MovieCard";
+import MovieDetails from "./components/MovieDetails";
 
-function App() {
-   
+const API_KEY = import.meta.env.VITE_OMDB_API_KEY;
+
+const App = () => {
+  const [movies, setMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
-   
+  useEffect(() => {
+    const fetchInitialMovies = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get(
+          `http://www.omdbapi.com/?apikey=${API_KEY}&s=movie`
+        );
+        if (response.data.Response === "True") {
+          setMovies(response.data.Search);
+          setError("");
+        } else {
+          setError(response.data.Error || "No movies found.");
+          setMovies([]);
+        }
+      } catch (err) {
+        setError("An error occurred while fetching initial movies.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleSelectMovie = async (imdbID) => {
-    setSelectedMovie(null);
-    setLoading(true);
-    setError("");
+    fetchInitialMovies();
+  }, []);
 
+  const searchMovies = async (query) => {
+    setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://www.omdbapi.com/?i=${imdbID}&apikey=YOUR_OMDB_API_KEY&plot=full`
+      const response = await axios.get(
+        `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
       );
-      const data = await response.json();
-
-      if (data.Response === "True") {
-        setSelectedMovie(data);
+      if (response.data.Response === "True") {
+        setMovies(response.data.Search);
+        setError("");
       } else {
-        setError(data.Error || "Failed to fetch movie details.");
+        setError(response.data.Error || "No movies found.");
+        setMovies([]);
       }
     } catch (err) {
-      setError(
-        "Failed to fetch movie details. Please check your network connection."
-      );
-      console.error(err);
+      setError("An error occurred while fetching data.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const fetchMovieDetails = async (id) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `http://www.omdbapi.com/?apikey=${API_KEY}&i=${id}`
+      );
+      console.log("Fetched Movie Details:", response.data); // For debugging
+      setSelectedMovie(response.data);
+    } catch (err) {
+      setError("An error occurred while fetching movie details.");
+      console.error("Error fetching movie details:", err); // For debugging
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen py-6">
-      <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">
-          Movie Database
-        </h1>
-  
-
-        {loading && (
-          <p className="text-center text-gray-600 mt-4">Loading...</p>
+    <div className="min-h-screen h-full w-full bg-gray-100 p-4 text-black">
+      <div className="h-full flex flex-col w-full">
+        <h1 className="text-3xl font-bold text-center mb-6">Movie Database</h1>
+        <div className="max-w-md mx-auto mb-8 w-full px-4">
+          <SearchBar onSearch={searchMovies} />
+        </div>
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <div className="flex-grow w-full relative">
+          {" "}
+          {/* Added relative positioning */}
+          {isLoading && (
+            <div className="absolute inset-0 flex justify-center items-center bg-gray-100 bg-opacity-80 z-10">
+              {" "}
+              {/* Overlay for loading */}
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+            </div>
+          )}
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full ${
+              isLoading ? "opacity-0" : ""
+            }`}
+          >
+            {movies.map((movie) => (
+              <MovieCard
+                key={movie.imdbID}
+                movie={movie}
+                onClick={fetchMovieDetails}
+              />
+            ))}
+          </div>
+        </div>
+        {selectedMovie && (
+          <MovieDetails
+            movie={selectedMovie}
+            onClose={() => setSelectedMovie(null)}
+          />
         )}
-        {error && <p className="text-center text-red-500 mt-4">{error}</p>}
-
-        {!selectedMovie && !loading && movies.length > 0 && (
-          <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
-        )}
-
- 
-
-         
       </div>
     </div>
   );
-}
+};
 
 export default App;

@@ -15,7 +15,7 @@ const App = () => {
   useEffect(() => {
     const fetchInitialMovies = async () => {
       setIsLoading(true);
-      
+
       try {
         const response = await axios.get(
           `http://www.omdbapi.com/?apikey=${API_KEY}&s=movie`
@@ -27,6 +27,7 @@ const App = () => {
           setError(response.data.Error || "No movies found.");
           setMovies([]);
         }
+      // eslint-disable-next-line no-unused-vars
       } catch (err) {
         setError("An error occurred while fetching initial movies.");
       } finally {
@@ -49,7 +50,7 @@ const App = () => {
       } else {
         setError(response.data.Error || "No movies found.");
         setMovies([]);
-      }
+      } // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("An error occurred while fetching data.");
     } finally {
